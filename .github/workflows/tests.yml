@@ -1,0 +1,38 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ['18.x', '20.x', '22.x']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preparar Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      # Sin dependencias que instalar: no hay npm ci porque no hay lockfile.
+      - name: Tests de arranque (node:assert)
+        run: npm run test:bootstrap
+
+      - name: El framework testeándose a sí mismo
+        run: node bin/cli.js tests/self --coverage --reporter=console,html,json
+
+      - name: Suite de ejemplo
+        run: npm run example
+
+      - name: Publicar los informes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: informes-${{ matrix.node-version }}
+          path: coverage/
