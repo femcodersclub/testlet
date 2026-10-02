@@ -1,0 +1,152 @@
+classDiagram
+    direction TB
+
+    class CLI {
+        +String~~ patterns
+        +Boolean watch
+        +discover(glob) String[]
+        +run() Number
+    }
+
+    class Runner {
+        -Suite rootSuite
+        -Suite~~ suiteStack
+        -Reporter~~ reporters
+        -Boolean hasOnly
+        +describe(name, fn) void
+        +it(name, fn, options) void
+        +beforeEach(fn) void
+        +afterEach(fn) void
+        +run() RunSummary
+        -runSuite(suite) void
+        -runTest(test, hooks) TestResult
+        -withTimeout(promise, ms) Promise
+    }
+
+    class Suite {
+        +String name
+        +Suite parent
+        +Suite~~ children
+        +Test~~ tests
+        +Function~~ beforeEachHooks
+        +Function~~ afterEachHooks
+        +collectHooks() Function[]
+    }
+
+    class Test {
+        +String name
+        +Function fn
+        +Boolean only
+        +Boolean skip
+        +Number timeout
+        +isAsync() Boolean
+    }
+
+    class TestResult {
+        +Test test
+        +String status
+        +Number durationMs
+        +AssertionError error
+    }
+
+    class RunSummary {
+        +Number passed
+        +Number failed
+        +Number skipped
+        +Number durationMs
+        +TestResult~~ results
+        +CoverageReport coverage
+        +exitCode() Number
+    }
+
+    class Assert {
+        +equal(actual, expected) void
+        +deepEqual(actual, expected) void
+        +throws(fn, matcher) void
+        +rejects(promise, matcher) Promise
+        +match(value, regexp) void
+        -diff(actual, expected) String
+    }
+
+    class AssertionError {
+        +String message
+        +any actual
+        +any expected
+        +String operator
+        +String diff
+    }
+
+    class Spy {
+        +Call~~ calls
+        +Number callCount
+        +returns(value) Spy
+        +throws(error) Spy
+        +reset() void
+        +calledWith(...args) Boolean
+    }
+
+    class FakeTimers {
+        -Number now
+        -Timer~~ pending
+        +install() void
+        +tick(ms) void
+        +restore() void
+    }
+
+    class Reporter {
+        <<interface>>
+        +onRunStart(plan) void
+        +onSuiteStart(suite) void
+        +onTestEnd(result) void
+        +onRunEnd(summary) void
+    }
+
+    class ConsoleReporter {
+        -Boolean useColor
+        +onTestEnd(result) void
+        +onRunEnd(summary) void
+    }
+
+    class HtmlReporter {
+        +String outputPath
+        +onRunEnd(summary) void
+        -renderTemplate(summary) String
+    }
+
+    class JsonReporter {
+        +String outputPath
+        +onRunEnd(summary) void
+    }
+
+    class Coverage {
+        -Session inspectorSession
+        +start() Promise
+        +stop() Promise~CoverageReport~
+        -filterUserFiles(scripts) Script[]
+    }
+
+    class CoverageReport {
+        +Number percentCovered
+        +FileCoverage~~ files
+        +uncoveredLines(file) Number[]
+    }
+
+    CLI --> Runner : orquesta
+    CLI --> Coverage : activa con --coverage
+    Runner o-- Suite : árbol de suites
+    Suite "1" *-- "0..*" Suite : anidadas
+    Suite "1" *-- "0..*" Test
+    Runner ..> TestResult : produce
+    Runner --> RunSummary : agrega
+    RunSummary o-- TestResult
+    RunSummary o-- CoverageReport
+    Test ..> Assert : usa dentro de fn
+    Test ..> Spy : usa dentro de fn
+    Test ..> FakeTimers : usa dentro de fn
+    Assert ..> AssertionError : lanza
+    TestResult --> AssertionError : captura
+    Runner --> Reporter : notifica
+    Reporter <|.. ConsoleReporter
+    Reporter <|.. HtmlReporter
+    Reporter <|.. JsonReporter
+    Coverage --> CoverageReport : genera
