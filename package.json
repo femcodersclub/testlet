@@ -1,0 +1,35 @@
+{
+  "name": "testlet",
+  "version": "1.0.0",
+  "description": "Framework de testing en JavaScript vanilla: assertions con diff, runner, spies, fake timers, reporters y cobertura real con V8. Cero dependencias.",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "testlet": "bin/cli.js"
+  },
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "npm run test:bootstrap && npm run test:self",
+    "test:bootstrap": "node tests/bootstrap/run-all.js",
+    "test:self": "node bin/cli.js tests/self",
+    "test:coverage": "node bin/cli.js tests/self --coverage",
+    "test:html": "node bin/cli.js tests/self --coverage --reporter=console,html,json",
+    "test:watch": "node bin/cli.js tests/self --watch",
+    "example": "node bin/cli.js examples"
+  },
+  "keywords": [
+    "testing",
+    "test-runner",
+    "assertions",
+    "vanilla-js",
+    "coverage",
+    "zero-dependencies"
+  ],
+  "author": "FemCoders Club",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
